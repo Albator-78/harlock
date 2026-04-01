@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tirage du Tarot — Trois Arcanes (v1)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1008;
+    --parchment: #f5ead6;
+    --gold: #c9963a;
+    --gold-light: #e8c46a;
+    --crimson: #7a1c2e;
+    --card-back: #1e1230;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    background-image:
+      radial-gradient(ellipse at 50% 0%, #2a1a40 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 100%, #1a0a10 0%, transparent 60%);
+    min-height: 100vh;
+    font-family: 'Crimson Text', serif;
+    color: var(--parchment);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+    overflow-x: hidden;
+  }
+
+  .ornament {
+    color: var(--gold);
+    font-size: 1.4rem;
+    letter-spacing: 0.5em;
+    opacity: 0.7;
+    display: block;
+    text-align: center;
+    margin: 6px 0;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 50px;
+    animation: fadeDown 1.2s ease both;
+  }
+
+  header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    color: var(--gold-light);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 40px rgba(201,150,58,0.5), 0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.4;
+    margin: 8px 0;
+  }
+
+  header p {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: rgba(245,234,214,0.6);
+    font-size: 1.1rem;
+    margin-top: 10px;
+    letter-spacing: 0.03em;
+  }
+
+  .sep {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 10px auto;
+  }
+  .sep::before, .sep::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .sep span { color: var(--gold); font-size: 1.2rem; }
+
+  .positions-labels {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .pos-label {
+    text-align: center;
+    width: 140px;
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--gold);
+    opacity: 0.8;
+    letter-spacing: 0.05em;
+  }
+  .pos-number {
+    display: block;
+    font-style: normal;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.65rem;
+    opacity: 0.55;
+    margin-bottom: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  .spread {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 0 auto 50px;
+    perspective: 1200px;
+    animation: fadeUp 1s 0.3s ease both;
+  }
+
+  .card-slot {
+    position: relative;
+    width: 140px;
+    cursor: pointer;
+    transform-style: preserve-3d;
+  }
+
+  .card-inner {
+    position: relative;
+    width: 140px;
+    height: 240px;
+    transform-style: preserve-3d;
+    transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-slot.flipped .card-inner { transform: rotateY(180deg); }
+
+  .card-face, .card-back-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .card-back-face {
+    background: var(--card-back);
+    border: 2px solid #4a3560;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7), inset 0 0 30px rgba(100,60,180,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .card-back-face::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px solid #4a3560;
+    border-radius: 6px;
+    opacity: 0.5;
+  }
+  .card-back-svg { width: 70%; opacity: 0.35; }
+
+  .card-face {
+    transform: rotateY(180deg);
+    background: var(--parchment);
+    border: 2px solid var(--gold);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.8), 0 0 20px rgba(201,150,58,0.15), inset 0 0 15px rgba(245,234,214,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 8px 8px;
+    overflow: hidden;
+  }
+  .card-face::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border: 1px solid rgba(201,150,58,0.35);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+
+  .card-roman { font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; color: var(--gold); letter-spacing: 0.15em; opacity: 0.8; }
+  .card-symbol { font-size: 3rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+  .card-title { font-family: 'Cinzel Decorative', serif; font-size: 0.52rem; color: var(--ink); text-align: center; letter-spacing: 0.08em; line-height: 1.3; text-transform: uppercase; }
+
+  .card-slot:not(.flipped):hover .card-inner { transform: translateY(-8px) rotateY(5deg); }
+  .card-slot:not(.flipped):hover .card-back-face { box-shadow: 0 16px 40px rgba(0,0,0,0.8), 0 0 20px rgba(120,80,200,0.3); }
+  .card-slot.flipped { cursor: default; }
+
+  .btn-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 50px;
+    animation: fadeUp 1.4s 0.5s ease both;
+  }
+
+  button {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    border: none;
+    padding: 14px 36px;
+    border-radius: 3px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 4px 20px rgba(201,150,58,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+  }
+  button::before { content: '✦'; margin-right: 10px; opacity: 0.6; font-size: 0.65rem; }
+  button::after  { content: '✦'; margin-left: 10px;  opacity: 0.6; font-size: 0.65rem; }
+  button:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(201,150,58,0.5); }
+  button:active { transform: translateY(0); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  #interpretation {
+    max-width: 680px;
+    width: 100%;
+    background: linear-gradient(160deg, rgba(26,16,8,0.9), rgba(10,6,20,0.9));
+    border: 1px solid rgba(201,150,58,0.3);
+    border-radius: 8px;
+    padding: 40px 44px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 1s ease, transform 1s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7), inset 0 0 40px rgba(201,150,58,0.03);
+  }
+  #interpretation.visible { opacity: 1; transform: translateY(0); }
+
+  .interp-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.7rem;
+    color: var(--gold);
+    letter-spacing: 0.25em;
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    opacity: 0.8;
+  }
+
+  .interp-sentence {
+    font-family: 'IM Fell English', serif;
+    font-size: 1.45rem;
+    line-height: 1.85;
+    color: var(--parchment);
+    text-align: center;
+    letter-spacing: 0.01em;
+  }
+  .interp-sentence em { font-style: italic; color: var(--gold-light); }
+
+  .interp-cards {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 32px;
+  }
+
+  .interp-card-detail {
+    flex: 1;
+    min-width: 150px;
+    max-width: 190px;
+    text-align: center;
+    padding: 14px 10px;
+    border-top: 1px solid rgba(201,150,58,0.2);
+  }
+
+  .icd-pos { font-family: 'Cinzel Decorative', serif; font-size: 0.5rem; letter-spacing: 0.2em; color: var(--gold); opacity: 0.6; text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .icd-name { font-family: 'Crimson Text', serif; font-weight: 600; font-size: 0.95rem; color: var(--parchment); display: block; margin-bottom: 6px; }
+  .icd-fragment { font-family: 'IM Fell English', serif; font-style: italic; font-size: 0.82rem; color: rgba(245,234,214,0.55); line-height: 1.4; }
+
+  #reset-btn {
+    display: none;
+    margin-top: 28px;
+    background: transparent;
+    border: 1px solid rgba(201,150,58,0.5);
+    color: var(--gold);
+    box-shadow: none;
+    font-size: 0.65rem;
+    padding: 10px 26px;
+  }
+  #reset-btn:hover { background: rgba(201,150,58,0.08); box-shadow: none; }
+  .reset-wrap { text-align: center; }
+
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:translateY(0); } }
+
+  @media (max-width: 480px) {
+    .card-slot { width: 110px; }
+    .card-inner { width: 110px; height: 188px; }
+    .card-symbol { font-size: 2.4rem; }
+    #interpretation { padding: 28px 20px; }
+    .interp-sentence { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="ornament">✦ ✧ ✦</span>
+  <h1>Le Grand Tirage<br>des Trois Arcanes</h1>
+  <div class="sep"><span>✦</span></div>
+  <p>Passé · Présent · Futur</p>
+</header>
+
+<div class="positions-labels">
+  <div class="pos-label"><span class="pos-number">I</span>Ce qui fut</div>
+  <div class="pos-label"><span class="pos-number">II</span>Ce qui est</div>
+  <div class="pos-label"><span class="pos-number">III</span>Ce qui viendra</div>
+</div>
+
+<div class="spread" id="spread">
+  <div class="card-slot" id="slot-0" onclick="flipCard(0)">
+    <div class="card-inner">
+      <div class="card-back-face">
+        <svg class="card-back-svg" viewBox="0 0 80 120" fill="none">
+          <circle cx="40" cy="60" r="35" stroke="#9070d0" stroke-width="1"/>
+          <polygon points="40,25 66,72 14,72" fill="none" stroke="#9070d0" stroke-width="1"/>
+          <circle cx="40" cy="60" r="14" stroke="#9070d0" stroke-width="0.8"/>
+          <line x1="40" y1="10" x2="40" y2="110" stroke="#9070d0" stroke-width="0.5" opacity="0.4"/>
+          <line x1="8" y1="60" x2="72" y2="60" stroke="#9070d0" stroke-width="0.5" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="card-face" id="face-0"></div>
+    </div>
+  </div>
+
+  <div class="card-slot" id="slot-1" onclick="flipCard(1)">
+    <div class="card-inner">
+      <div class="card-back-face">
+        <svg class="card-back-svg" viewBox="0 0 80 120" fill="none">
+          <circle cx="40" cy="60" r="35" stroke="#9070d0" stroke-width="1"/>
+          <polygon points="40,25 66,72 14,72" fill="none" stroke="#9070d0" stroke-width="1"/>
+          <circle cx="40" cy="60" r="14" stroke="#9070d0" stroke-width="0.8"/>
+          <line x1="40" y1="10" x2="40" y2="110" stroke="#9070d0" stroke-width="0.5" opacity="0.4"/>
+          <line x1="8" y1="60" x2="72" y2="60" stroke="#9070d0" stroke-width="0.5" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="card-face" id="face-1"></div>
+    </div>
+  </div>
+
+  <div class="card-slot" id="slot-2" onclick="flipCard(2)">
+    <div class="card-inner">
+      <div class="card-back-face">
+        <svg class="card-back-svg" viewBox="0 0 80 120" fill="none">
+          <circle cx="40" cy="60" r="35" stroke="#9070d0" stroke-width="1"/>
+          <polygon points="40,25 66,72 14,72" fill="none" stroke="#9070d0" stroke-width="1"/>
+          <circle cx="40" cy="60" r="14" stroke="#9070d0" stroke-width="0.8"/>
+          <line x1="40" y1="10" x2="40" y2="110" stroke="#9070d0" stroke-width="0.5" opacity="0.4"/>
+          <line x1="8" y1="60" x2="72" y2="60" stroke="#9070d0" stroke-width="0.5" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="card-face" id="face-2"></div>
+    </div>
+  </div>
+</div>
+
+<div class="btn-wrap">
+  <button id="draw-btn" onclick="drawCards()">Tirer les cartes</button>
+</div>
+
+<div id="interpretation">
+  <div class="interp-title">✦ &nbsp; Lecture des Arcanes &nbsp; ✦</div>
+  <div class="interp-sentence" id="interp-text"></div>
+  <div class="interp-cards" id="interp-cards"></div>
+  <div class="reset-wrap">
+    <button id="reset-btn" onclick="resetReading()">✦ Nouveau tirage ✦</button>
+  </div>
+</div>
+
+<script>
+const ARCANES = [
+  { roman:"0",    name:"Le Mat",            symbol:"🎭",
+    past:"une errance fondatrice",
+    present:"un souffle d'innocence traverse tout",
+    future:"l'horizon s'ouvre sans contrainte" },
+  { roman:"I",    name:"Le Bateleur",       symbol:"🪄",
+    past:"une habilité cachée forgea le destin",
+    present:"la volonté façonne la matière",
+    future:"un nouveau pouvoir naîtra entre tes mains" },
+  { roman:"II",   name:"La Papesse",        symbol:"📖",
+    past:"le silence gardait un savoir profond",
+    present:"le mystère demeure voilé, patient",
+    future:"la révélation viendra en son heure" },
+  { roman:"III",  name:"L'Impératrice",     symbol:"🌿",
+    past:"la terre nourricière porta ses fruits",
+    present:"une douceur fertile enveloppe l'instant",
+    future:"la création s'épanouira dans l'abondance" },
+  { roman:"IV",   name:"L'Empereur",        symbol:"👑",
+    past:"une autorité bâtit les fondements",
+    present:"la structure ordonne le chaos",
+    future:"un règne stable s'installera durablement" },
+  { roman:"V",    name:"Le Pape",           symbol:"⛪",
+    past:"une tradition transmit sa lumière",
+    present:"la sagesse cherche à être entendue",
+    future:"un enseignement élèvera l'âme" },
+  { roman:"VI",   name:"L'Amoureux",        symbol:"💞",
+    past:"un choix du cœur marqua l'existence",
+    present:"deux chemins appellent, le cœur hésite",
+    future:"une union décisive tracera la voie" },
+  { roman:"VII",  name:"Le Chariot",        symbol:"⚔️",
+    past:"une victoire fut arrachée par la volonté",
+    present:"la maîtrise de soi conduit la course",
+    future:"le triomphe portera au loin" },
+  { roman:"VIII", name:"La Justice",        symbol:"⚖️",
+    past:"une vérité fut pesée sans complaisance",
+    present:"la balance exige son équilibre",
+    future:"la juste rétribution s'accomplira" },
+  { roman:"IX",   name:"L'Ermite",          symbol:"🕯️",
+    past:"la solitude creusa un chemin intérieur",
+    present:"la retraite éclaire ce qui fut obscur",
+    future:"la lumière solitaire guidera vers l'essentiel" },
+  { roman:"X",    name:"La Roue",           symbol:"🔮",
+    past:"la fortune tourna, changeant tout",
+    present:"le cycle est en mouvement, rien n'est fixe",
+    future:"une nouvelle chance s'annonce au tournant" },
+  { roman:"XI",   name:"La Force",          symbol:"🦁",
+    past:"une puissance douce dompta les instincts",
+    present:"le courage silencieux tient les rênes",
+    future:"la maîtrise de l'ombre apportera la paix" },
+  { roman:"XII",  name:"Le Pendu",          symbol:"🙃",
+    past:"un sacrifice ouvrit les yeux sur l'essentiel",
+    present:"l'attente suspendue révèle ce qui échappe",
+    future:"le lâcher-prise ouvrira une porte insoupçonnée" },
+  { roman:"XIII", name:"L'Arcane sans nom", symbol:"☠️",
+    past:"une fin radicale défraya la mémoire",
+    present:"la transformation travaille en profondeur",
+    future:"une renaissance surgira des cendres" },
+  { roman:"XIV",  name:"La Tempérance",     symbol:"🏺",
+    past:"un équilibre patient forgea la sagesse",
+    present:"le flux circule, cherchant l'harmonie",
+    future:"la juste mesure apportera la sérénité" },
+  { roman:"XV",   name:"Le Diable",         symbol:"🔗",
+    past:"une chaîne invisible liait les élans",
+    present:"les désirs obscurs réclament leur dû",
+    future:"la tentation sera dépassée ou assumée" },
+  { roman:"XVI",  name:"La Maison-Dieu",    symbol:"⚡",
+    past:"une rupture soudaine balaya l'édifice",
+    present:"l'éclair renverse ce qui était figé",
+    future:"une libération brutale ouvrira l'espace" },
+  { roman:"XVII", name:"L'Étoile",          symbol:"⭐",
+    past:"une espérance secrète guida les pas",
+    present:"la grâce répand son eau sur la terre",
+    future:"l'étoile brillera sur un chemin apaisé" },
+  { roman:"XVIII",name:"La Lune",           symbol:"🌙",
+    past:"l'illusion et le rêve brouillèrent la route",
+    present:"les eaux profondes agitent l'inconscient",
+    future:"le mystère lunaire cédera sa vérité" },
+  { roman:"XIX",  name:"Le Soleil",         symbol:"☀️",
+    past:"une joie rayonnante illumina l'enfance du monde",
+    present:"la clarté dissipe les dernières ombres",
+    future:"le succès et la lumière couronnent l'avenir" },
+  { roman:"XX",   name:"Le Jugement",       symbol:"🎺",
+    past:"un appel intérieur résonna sans réponse",
+    present:"la résurrection de soi s'amorce enfin",
+    future:"une transformation totale est imminente" },
+  { roman:"XXI",  name:"Le Monde",          symbol:"🌍",
+    past:"un cycle s'acheva dans la plénitude",
+    present:"l'accomplissement danse au centre de tout",
+    future:"la totalité sera embrassée dans sa gloire" },
+];
+
+const POSITIONS = [
+  { key:'past',    label:'Passé'   },
+  { key:'present', label:'Présent' },
+  { key:'future',  label:'Futur'   },
+];
+
+let drawnCards = null;
+let flipped = [false, false, false];
+
+function drawCards() {
+  document.getElementById('draw-btn').disabled = true;
+  const pool = [...ARCANES];
+  drawnCards = [];
+  for (let i = 0; i < 3; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    drawnCards.push(pool.splice(idx, 1)[0]);
+  }
+  flipped = [false, false, false];
+  drawnCards.forEach((card, i) => {
+    document.getElementById('face-'+i).innerHTML =
+      '<span class="card-roman">'+card.roman+'</span>'+
+      '<span class="card-symbol">'+card.symbol+'</span>'+
+      '<span class="card-title">'+card.name+'</span>';
+    document.getElementById('slot-'+i).classList.remove('flipped');
+  });
+  document.getElementById('interpretation').classList.remove('visible');
+  document.getElementById('reset-btn').style.display = 'none';
+  setTimeout(() => flipCard(0), 400);
+  setTimeout(() => flipCard(1), 900);
+  setTimeout(() => flipCard(2), 1400);
+}
+
+function flipCard(i) {
+  if (!drawnCards || flipped[i]) return;
+  flipped[i] = true;
+  document.getElementById('slot-'+i).classList.add('flipped');
+  if (flipped[0] && flipped[1] && flipped[2]) setTimeout(showInterpretation, 600);
+}
+
+function showInterpretation() {
+  const [c0, c1, c2] = drawnCards;
+  document.getElementById('interp-text').innerHTML =
+    '<em>'+c0.past+'</em>, et aujourd\'hui '+
+    '<em>'+c1.present+'</em> — '+
+    'car demain, <em>'+c2.future+'</em>.';
+
+  document.getElementById('interp-cards').innerHTML = drawnCards.map((card, i) =>
+    '<div class="interp-card-detail">'+
+      '<span class="icd-pos">'+POSITIONS[i].label+'</span>'+
+      '<span class="icd-name">'+card.symbol+' '+card.name+'</span>'+
+      '<span class="icd-fragment">'+card[POSITIONS[i].key]+'</span>'+
+    '</div>'
+  ).join('');
+
+  const box = document.getElementById('interpretation');
+  box.classList.add('visible');
+  document.getElementById('reset-btn').style.display = 'inline-block';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function resetReading() {
+  drawnCards = null;
+  flipped = [false, false, false];
+  for (let i = 0; i < 3; i++) {
+    document.getElementById('slot-'+i).classList.remove('flipped');
+  }
+  document.getElementById('interpretation').classList.remove('visible');
+  document.getElementById('reset-btn').style.display = 'none';
+  document.getElementById('draw-btn').disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
